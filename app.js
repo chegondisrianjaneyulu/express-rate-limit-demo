@@ -1,8 +1,19 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const Redis = require('redis');
+const { RateLimitRedisStore } = require('rate-limit-redis');
 
 const app = express();
 const PORT = process.env.PORT || 3000
+
+const redisClient = Redis.createClient({
+    socket: {
+        host: 'localhost',
+        port: 6379,
+    },
+});
+
+redisClient.connect().catch(console.error);
 
 const limiter = rateLimit({
     windowMs:4000,
@@ -16,7 +27,7 @@ const limiter = rateLimit({
     skip: (req) => {
         const skipUrls = ['/status', '/languages']
         return skipUrls.includes(req.path)
-    }
+    },
 })
 
 app.use(limiter)
@@ -36,7 +47,6 @@ app.use('/frameworks', (req, res) => {
 app.use('/', (req, res) => {
     res.send("Welcome to api")
 })
-
 
 
 app.listen(PORT, () => {
